@@ -1,0 +1,58 @@
+import json
+import multiprocessing
+import random
+import time
+
+# Import possible actions
+from board import CallAction, CheckAction, FoldAction, RaiseAction
+
+
+class PokerBot(multiprocessing.Process):
+    def __init__(self, conn, name="MyBot"):
+        super().__init__()
+        self.conn = conn
+        self.running = True
+        self.name = name
+
+    def run(self):
+        print(f"[{self.name}] Starting bot process...")
+        while self.running:
+            if self.conn.poll():  # Check for incoming message
+                msg = self.conn.recv()
+                if msg == "terminate":
+                    self.running = False
+                    print(f"[{self.name}] Terminating bot process...")
+                else:
+                    # Assume msg is the game state JSON
+                    action = self.decide_action(msg)
+                    self.conn.send(action)
+            time.sleep(0.01)  # Prevent CPU overuse
+
+    def decide_action(self, game_state_json):
+        game_state = json.loads(game_state_json)
+
+        player_curr_bet = game_state.get("player_curr_bet", 0)
+        player_stack = game_state.get("player_stack", 0)
+        community_cards = game_state.get("community_cards", [])
+        hand = game_state.get("hand", [])
+        can_check = game_state.get("can_check", False)
+        curr_bet = game_state.get("curr_bet", 0)
+        ante = game_state.get("ante", 0)
+
+        if player_curr_bet > 0:
+            return CallAction()
+
+        # Dummy logic
+        if random.randint(0, 100) > 50:
+            if not ante == 0:
+                return RaiseAction(curr_bet + (3 * ante))
+            return RaiseAction(curr_bet + 1)
+        else:
+            return CallAction()
+        pass
+
+    def end_game(self, game_state_json):
+        # Handle end of round state
+        # game state will show final round standings and each
+        # players last action
+        pass
