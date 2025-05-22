@@ -182,14 +182,14 @@ def players_not_ready(players):
     return False
 
 
-def play_poker_round(players, ante=0):
+def play_poker_round(players, ante=0, blinds=[0, 0]):
     deck = Deck()
     deck.shuffle()
 
     game_state = GameState(players=players, deck=deck, ante=ante)
 
     print("Bots created!")
-    game_state.reset_round(ante=ante)
+    game_state.reset_round(ante=ante, blinds=blinds)
     # Pre-flop: Deal 2 cards to each player
     for player in players:
         if player.in_hand:
@@ -241,7 +241,8 @@ def play_poker_round(players, ante=0):
         p.in_hand = True
         p.ready = False
         p.hand = []
-    game_state.reset_round()
+    # Rotate starting position of players
+    players = [players[-1]] + players[:-1]
 
 
 def terminate(players):
@@ -280,9 +281,10 @@ antes = [
     100,
 ]
 
-antes = [5]
+# antes = [5]
+blinds = [[10, 20]]
 for i in range(len(antes)):
-    play_poker_round(players, ante=antes[i])
+    play_poker_round(players, ante=antes[i], blinds=blinds[0])
 
 sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
 print("Top 2 move on (if they have enough chips for next antes)")

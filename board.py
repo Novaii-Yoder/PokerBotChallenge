@@ -220,15 +220,25 @@ class GameState:
             p.ready = False
             p.curr_bet = 0
 
-    def reset_round(self, ante=0):
+    def reset_round(self, ante=0, blinds=[0, 0]):
         self.ante = ante
         self.pot = 0
         self.reset_turn()
+        blind_count = 0
         for p in self.players:
-            if p.in_hand:
-                if p.chips >= ante:
-                    p.in_hand = True
-                    p.chips -= ante
-                    self.pot += ante
-                else:
-                    p.in_hand = False
+            if p.chips >= ante:
+                p.chips -= ante
+
+                if blind_count == 0 and p.chips >= blinds[0]:
+                    p.chips -= blinds[0]
+                    self.pot += blinds[0]
+                    blind_count += 1
+                if blind_count == 1 and p.chips >= blinds[1]:
+                    p.chips -= blinds[1]
+                    self.pot += blinds[1]
+                    blind_count += 1
+
+                p.in_hand = True
+                self.pot += ante
+                continue
+            p.in_hand = False

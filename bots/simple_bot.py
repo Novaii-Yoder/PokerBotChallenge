@@ -34,6 +34,7 @@ class PokerBot(multiprocessing.Process):
         self.conn = conn
         self.running = True
         self.name = name
+        self.action_count = 0
 
     def run(self):
         print(f"[{self.name}] Starting bot process...")
@@ -50,6 +51,7 @@ class PokerBot(multiprocessing.Process):
             time.sleep(0.01)  # Prevent CPU overuse
 
     def decide_action(self, game_state_json):
+        self.action_count += 1
         game_state = json.loads(game_state_json)
         is_end_state = game_state.get("is_end_state", False)
         if is_end_state:
@@ -98,7 +100,9 @@ class PokerBot(multiprocessing.Process):
         def straight_odds(hand, board):
             all_cards = hand + board
 
-            pass
+            max_chance = 0
+
+            return max_chance
 
         def pair_odds(hand, board):
             all_cards = hand + board
@@ -195,8 +199,8 @@ class PokerBot(multiprocessing.Process):
             or quad_odds(hand, board) >= 0.2
         ):
             # print("good odds")
-            if player_stack > curr_bet - player_curr_bet + ante:
-                return RaiseAction(curr_bet + ante)
+            if player_stack // 10 > curr_bet:
+                return RaiseAction(player_stack // 10)
             if player_stack > curr_bet - player_curr_bet:
                 return CallAction()
         if curr_bet - player_curr_bet <= player_stack // 10 or draws_left >= 2:

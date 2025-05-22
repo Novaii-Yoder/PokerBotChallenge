@@ -8,4 +8,3 @@ The goal is to build or train an algorithm that can play the game not optimally,
 These rounds of Texas Hold'em will have an increasing ante and will allow a player to play if they can pay the ante, even if that is all they can bet. There is no side pots, and if a player who was all in wins, they will take the pot even if bets beyond their all in were made by other players.
 
 The engine that hosts the games and communicates with the bots is subject to change and is not in the scope of the challenge!
- - Currently engine doesn't have small or big blind implementation
