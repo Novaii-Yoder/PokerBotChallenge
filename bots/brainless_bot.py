@@ -6,13 +6,28 @@ import time
 # Import possible actions
 from board import CallAction, CheckAction, FoldAction, RaiseAction
 
+"""
+Poker Bot obj
+@inherits multiprocessing.Process
+Allows the bot to 'think' while other players wait on action
+"""
+
 
 class PokerBot(multiprocessing.Process):
+    """
+    Initialization
+    """
+
     def __init__(self, conn, name="MyBot"):
         super().__init__()
         self.conn = conn
         self.running = True
         self.name = name
+
+    """
+    Starts the bot process.
+    Probably shouldn't be messed with...
+    """
 
     def run(self):
         print(f"[{self.name}] Starting bot process...")
@@ -28,6 +43,13 @@ class PokerBot(multiprocessing.Process):
                     self.conn.send(action)
             time.sleep(0.01)  # Prevent CPU overuse
 
+    """
+    Decides action bot wants to take
+    @param game_state_json: json containing relavant info on the game.
+    
+    @return action: either CallAction(), RaiseAction(amount), FoldAction(),
+    """
+
     def decide_action(self, game_state_json):
         game_state = json.loads(game_state_json)
 
@@ -39,6 +61,7 @@ class PokerBot(multiprocessing.Process):
         curr_bet = game_state.get("curr_bet", 0)
         ante = game_state.get("ante", 0)
 
+        # always commit, never re-raise
         if player_curr_bet > 0:
             return CallAction()
 

@@ -164,6 +164,10 @@ class PokerBot(multiprocessing.Process):
                 odd += (deck_rank_counts[rank] / len(deck_left)) ** (4 - max_count)
             return 1 - ((1 - odd) ** draws_left)
 
+        # very hard to read logic
+        # but basically if hand has OK odds or has a decent hand already, raise, otherwise call.
+        # if hand has low odds and doesn't already have a ok hand, fold if bet was raised at all.
+
         if draws_left <= 2:
             score = evaluate_hand(board + hand)[0][0]
             if score > 2:
@@ -215,9 +219,3 @@ class PokerBot(multiprocessing.Process):
         # game state will show final round standings and each
         # players last action
         pass
-
-    def hand_score(hand, board):
-        if len(hand + board) < 5:
-            return 0
-        else:
-            return 1

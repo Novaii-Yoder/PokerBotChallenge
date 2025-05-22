@@ -8,6 +8,10 @@ from operator import attrgetter
 
 from board import *
 
+"""
+Player obj: used for engine side only
+"""
+
 
 class Player:
     def __init__(self, name="bot", bot=None, conn=None, chips=100):
@@ -31,6 +35,17 @@ class Player:
         if self.conn:
             return self.conn.send(game_state)
         return FoldAction()
+
+
+"""
+Loads players from folder
+
+@param folder_path: location of folder containing bots
+@param starting_chips: the chip starting amount for players
+@param players_max: the number of players at the table
+
+@return players: list of initialized player objs 
+"""
 
 
 def load_players_from_folder(folder_path, starting_chips=100, players_max=5):
@@ -61,6 +76,17 @@ def load_players_from_folder(folder_path, starting_chips=100, players_max=5):
     return players
 
 
+"""
+Evaluates the state of the game and selects winners.
+
+@param players: list of all player objs
+@param community_cards: the cards on the table
+
+@return winners: list of winning players
+@return best_score: the score of the winning players
+"""
+
+
 def compare_players(players, community_cards):
     best_score = (-1, [])
     winners = []
@@ -79,6 +105,14 @@ def compare_players(players, community_cards):
             winners.append(player)
 
     return winners, best_score
+
+
+"""
+Defines a single round of betting, lets all players decide an action, if there is any mistakes auto-folds
+
+@param players: list of players
+@param game_state: GameState obj, defining board, deck, and state
+"""
 
 
 def betting_round(players, game_state, max_time=5):
@@ -175,11 +209,29 @@ def betting_round(players, game_state, max_time=5):
     game_state.reset_turn()
 
 
+"""
+Simple function to check if all players are ready to end round
+
+@param players: list of players
+
+@return bool
+"""
+
+
 def players_not_ready(players):
     for p in players:
         if p.in_hand and not p.ready:
             return True
     return False
+
+
+"""
+Plays a round of poker, resets players turns and rotates position ordering at end of round
+
+@param players: list of players
+@param ante: ante chip cost
+@param blinds: tuple of small and big blind
+"""
 
 
 def play_poker_round(players, ante=0, blinds=[0, 0]):
@@ -245,6 +297,13 @@ def play_poker_round(players, ante=0, blinds=[0, 0]):
     players = [players[-1]] + players[:-1]
 
 
+"""
+Terminates players
+
+@param players: list of players
+"""
+
+
 def terminate(players):
     for player in players:
         player.conn.send("terminate")
@@ -280,11 +339,40 @@ antes = [
     50,
     100,
 ]
+blinds = [
+    [1, 2],
+    [1, 2],
+    [1, 2],
+    [2, 4],
+    [2, 4],
+    [2, 4],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [5, 10],
+    [20, 50],
+    [20, 50],
+    [20, 50],
+    [20, 50],
+    [50, 100],
+    [50, 100],
+    [100, 250],
+    [100, 250],
+]
 
+# antes is a list of antes per round
 # antes = [5]
-blinds = [[10, 20]]
+# blinds is a list of blinds used per round
+# blinds = [[10, 20]]
+
 for i in range(len(antes)):
-    play_poker_round(players, ante=antes[i], blinds=blinds[0])
+    play_poker_round(players, ante=antes[i], blinds=blinds[i])
 
 sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
 print("Top 2 move on (if they have enough chips for next antes)")

@@ -24,6 +24,10 @@ CallAction = namedtuple("CallAction", [])
 CheckAction = namedtuple("CheckAction", [])
 RaiseAction = namedtuple("RaiseAction", ["amount"])
 
+"""
+Card obj
+"""
+
 
 class Card:
     SUIT_MAP = {"H": "Hearts", "D": "Diamonds", "C": "Clubs", "S": "Spades"}
@@ -73,6 +77,12 @@ class Card:
         return {"suit": self.suit, "rank": self.rank}
 
 
+"""
+Deck obj
+will add new shuffle methods and multi-deck options for increase complexity for bots
+"""
+
+
 class Deck:
     def __init__(self):
         self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
@@ -104,6 +114,17 @@ class Deck:
 
     def reset(self):
         self.community_cards = []
+
+
+"""
+Evaluates the best possible hand from a set of cards
+only works with a set of more than 5 cards
+
+@param cards: a list of cards, is both hand and community cards
+
+@return best_score: int of score
+@return best_hand: list containing ranks of best hand
+"""
 
 
 def evaluate_hand(cards):
@@ -164,6 +185,11 @@ def evaluate_hand(cards):
             best_hand = combo
 
     return best_score, best_hand
+
+
+"""
+Game state obj
+"""
 
 
 class GameState:
