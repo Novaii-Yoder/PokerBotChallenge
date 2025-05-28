@@ -155,7 +155,7 @@ def betting_round(players, game_state, max_time=5):
                         fold(player)
                     continue
 
-                case CallAction():
+                case CallAction():  ### Add split pots?
                     # print(
                     #    f"p.chips {player.chips}\ng.bet {game_state.curr_bet}\np.bet {player.curr_bet}"
                     # )
@@ -182,18 +182,17 @@ def betting_round(players, game_state, max_time=5):
                     continue
 
                 case RaiseAction(amount=amount):
-                    if amount > game_state.curr_bet:
-                        if amount <= player.chips:
-                            game_state.pot += amount - player.curr_bet
-                            player.chips -= amount - player.curr_bet
-                            player.curr_bet = amount
-                            player.last_action = action
-                            game_state.curr_bet = amount
-                            # set all other players to unready
-                            for p in players:
-                                if p.in_hand:
-                                    p.ready = False
-                            player.ready = True
+                    if amount > game_state.curr_bet and amount <= player.chips:
+                        game_state.pot += amount - player.curr_bet
+                        player.chips -= amount - player.curr_bet
+                        player.curr_bet = amount
+                        player.last_action = action
+                        game_state.curr_bet = amount
+                        # set all other players to unready
+                        for p in players:
+                            if p.in_hand:
+                                p.ready = False
+                        player.ready = True
                     else:
                         print("Bad raise, folding")
                         fold(player)
@@ -253,18 +252,21 @@ def play_poker_round(players, ante=0, blinds=[0, 0]):
     betting_round(players, game_state)
 
     # Flop
+    deck.burn(1)
     deck.deal_table(3)
     print(f"Flop: {deck.show_table()}")
     print("\n-- Betting Round (Post-Flop) --\n")
     betting_round(players, game_state)
 
     # Turn
+    deck.burn(1)
     deck.deal_table(1)
     print(f"Turn: {deck.show_table()}")
     print("\n-- Betting Round (Post-Turn) --\n")
     betting_round(players, game_state)
 
     # River
+    deck.burn(1)
     deck.deal_table(1)
     print(f"River: {deck.show_table()}")
     print("\n-- Betting Round (Final) --\n")
@@ -288,6 +290,7 @@ def play_poker_round(players, ante=0, blinds=[0, 0]):
 
     print(f"Standings:")
     for p in players:
+        # print_cards_as_ascii(p.hand)
         p.bot.end_game(json.dumps(game_state.to_end_dict()))
         print(f"{p.name}: {p.chips}")
         p.in_hand = True

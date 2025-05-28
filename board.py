@@ -51,9 +51,9 @@ class Card:
     REVERSE_RANK_MAP = {v: k for k, v in RANK_MAP.items()}
 
     def __init__(self, suit, rank):
-        if suit not in self.SUIT_MAP.values():
+        if suit not in self.REVERSE_SUIT_MAP:
             raise ValueError(f"Invalid suit name: {suit}")
-        if rank not in self.RANK_MAP.values():
+        if rank not in self.REVERSE_RANK_MAP:
             raise ValueError(f"Invalid rank name: {rank}")
         self.suit = suit
         self.rank = rank
@@ -105,6 +105,15 @@ class Deck:
                 print("No more cards in the deck.")
         return dealt
 
+    def burn(self, num=1):
+        for _ in range(num):
+            if self.cards:
+                self.cards.pop()
+            else:
+                print("No more cards in the deck.")
+                return False
+            return True
+
     def deal_table(self, num=1):
         self.community_cards += self.deal(num)
         return self.community_cards
@@ -139,9 +148,8 @@ def evaluate_hand(cards):
         ranks = sorted(set(ranks))
         if ranks == [2, 3, 4, 5, 14]:  # A-2-3-4-5
             return True, 5
-        for i in range(len(ranks) - 4 + 1):
-            if ranks[i : i + 5] == list(range(ranks[i], ranks[i] + 5)):
-                return True, ranks[i + 4]
+        if ranks[0:5] == list(range(ranks[0], ranks[0] + 5)):
+            return True, ranks[4]
         return False, None
 
     def group_by_rank(ranks):
@@ -211,7 +219,7 @@ class GameState:
         for player in self.players:
             pd = {}
             pd["chips"] = player.chips
-            pd["action"] = "NULL"
+            pd["last_action"] = player.last_action
             pd["position"] = i
             i += 1
             players_dict[player.name] = pd
@@ -229,7 +237,7 @@ class GameState:
         for player in self.players:
             pd = {}
             pd["chips"] = player.chips
-            pd["action"] = player.last_action
+            pd["last_action"] = player.last_action
             pd["position"] = i
             i += 1
             if player.in_hand:
@@ -252,9 +260,8 @@ class GameState:
         self.reset_turn()
         blind_count = 0
         for p in self.players:
-            if p.chips >= ante:
+            if p.chips >= ante + blinds[1]:
                 p.chips -= ante
-
                 if blind_count == 0 and p.chips >= blinds[0]:
                     p.chips -= blinds[0]
                     self.pot += blinds[0]
@@ -268,3 +275,54 @@ class GameState:
                 self.pot += ante
                 continue
             p.in_hand = False
+        i = 0
+        while i < len(self.players):
+            p = self.players[i]
+            if not p.in_hand:
+                print(f"Eliminated player {p.name}")
+                self.players.remove(p)
+                p.conn.send("terminate")
+                p.bot.join()
+            else:
+                i += 1
+
+
+"""
+Visual ascii art printing.
+"""
+
+
+def print_cards_as_ascii(cards):
+    suit_map = {"H": "♡", "S": "♤", "C": "♧", "D": "♢"}
+
+    rank_suits = []
+    for card in cards:
+        card = card.short_str()
+        rank = card[0]
+        if rank == "T":
+            rank = "10"
+
+        suit = suit_map[card[1]]
+        rank_suits.append((rank, suit))
+
+    for i in range(7):
+        for j in range(len(rank_suits)):
+            rank, suit = rank_suits[j]
+            string = "   "
+
+            if rank == "10":
+                string = "10" + suit
+            else:
+                string = rank + suit + " "
+
+            if i == 0:
+                print(f"╔═════════╗", end="  ")
+            elif i == 1:
+                print(f"║{string}      ║", end="  ")
+            elif i == 5:
+                print(f"║      {string}║", end="  ")
+            elif i == 6:
+                print(f"╚═════════╝", end="  ")
+            else:
+                print(f"║         ║", end="  ")
+        print()
