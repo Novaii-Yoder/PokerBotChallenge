@@ -9,6 +9,21 @@ from operator import attrgetter
 from board import *
 
 """
+Jacob Yoder
+5/29/2025
+
+The engine for a poker bot tournament.
+
+Needs:
+    Needs full deck usage, to allow counting cards
+    Multi-deck implementation to help balance counting card odds
+    Could use split pots
+    Full tourney hosting (brackets, stages, and eliminations)
+    maybe add function that slows things down for viewing pleasure
+"""
+
+
+"""
 Player obj: used for engine side only
 """
 
@@ -233,7 +248,7 @@ Plays a round of poker, resets players turns and rotates position ordering at en
 """
 
 
-def play_poker_round(players, ante=0, blinds=[0, 0]):
+def play_poker_round(players, ante=0, blinds=[0, 0], visual=False):
     deck = Deck()
     deck.shuffle()
 
@@ -245,7 +260,11 @@ def play_poker_round(players, ante=0, blinds=[0, 0]):
     for player in players:
         if player.in_hand:
             player.receive_cards(deck.deal(2))
-            print(f"{player.name} is dealt: {player.show_hand()}")
+            if visual:
+                print(f"\n{player.name}'s hand:")
+                print_cards_as_ascii(player.hand)
+            else:
+                print(f"{player.name} is dealt: {player.show_hand()}")
 
     # Placeholder betting round
     print("\n-- Betting Round (Pre-Flop) --\n")
@@ -254,21 +273,33 @@ def play_poker_round(players, ante=0, blinds=[0, 0]):
     # Flop
     deck.burn(1)
     deck.deal_table(3)
-    print(f"Flop: {deck.show_table()}")
+    if visual:
+        print(f"\nFlop: ")
+        print_cards_as_ascii(deck.community_cards)
+    else:
+        print(f"Flop: {deck.show_table()}")
     print("\n-- Betting Round (Post-Flop) --\n")
     betting_round(players, game_state)
 
     # Turn
     deck.burn(1)
     deck.deal_table(1)
-    print(f"Turn: {deck.show_table()}")
+    if visual:
+        print(f"\nTurn: ")
+        print_cards_as_ascii(deck.community_cards)
+    else:
+        print(f"Turn: {deck.show_table()}")
     print("\n-- Betting Round (Post-Turn) --\n")
     betting_round(players, game_state)
 
     # River
     deck.burn(1)
     deck.deal_table(1)
-    print(f"River: {deck.show_table()}")
+    if visual:
+        print(f"\nRiver: ")
+        print_cards_as_ascii(deck.community_cards)
+    else:
+        print(f"River: {deck.show_table()}")
     print("\n-- Betting Round (Final) --\n")
     betting_round(players, game_state)
 
@@ -290,12 +321,12 @@ def play_poker_round(players, ante=0, blinds=[0, 0]):
 
     print(f"Standings:")
     for p in players:
-        # print_cards_as_ascii(p.hand)
         p.bot.end_game(json.dumps(game_state.to_end_dict()))
         print(f"{p.name}: {p.chips}")
         p.in_hand = True
         p.ready = False
         p.hand = []
+
     # Rotate starting position of players
     players = [players[-1]] + players[:-1]
 
@@ -370,12 +401,14 @@ blinds = [
 ]
 
 # antes is a list of antes per round
-# antes = [5]
+antes = [5]
 # blinds is a list of blinds used per round
-# blinds = [[10, 20]]
+blinds = [[10, 20]]
 
 for i in range(len(antes)):
-    play_poker_round(players, ante=antes[i], blinds=blinds[i])
+    play_poker_round(players, ante=antes[i], blinds=blinds[i], visual=True)
+    if len(players) == 1:
+        break
 
 sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
 print("Top 2 move on (if they have enough chips for next antes)")

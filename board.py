@@ -287,8 +287,13 @@ class GameState:
                 i += 1
 
 
+########### Visual ascii art printing.
+
+
 """
-Visual ascii art printing.
+Prints a list of cards as ascii art poker cards.
+
+@param cards: a list of card objs
 """
 
 
