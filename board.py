@@ -265,10 +265,14 @@ class GameState:
                 if blind_count == 0 and p.chips >= blinds[0]:
                     p.chips -= blinds[0]
                     self.pot += blinds[0]
+                    p.curr_bet = blinds[0]
+                    self.curr_bet = blinds[0]
                     blind_count += 1
                 if blind_count == 1 and p.chips >= blinds[1]:
                     p.chips -= blinds[1]
                     self.pot += blinds[1]
+                    p.curr_bet = blinds[1]
+                    self.curr_bet = blinds[1]
                     blind_count += 1
 
                 p.in_hand = True
