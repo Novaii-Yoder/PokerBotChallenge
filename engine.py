@@ -136,7 +136,7 @@ def betting_round(players, game_state, max_time=5):
         player.in_hand = False
 
     while players_not_ready(players):
-        for player in players[2:] + player[:2]:  # Start with non-blinds players
+        for player in players[2:] + players[:2]:  # Start with non-blinds players
             if player.ready:
                 continue
             if player.in_hand:
