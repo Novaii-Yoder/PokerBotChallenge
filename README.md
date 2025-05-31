@@ -13,17 +13,18 @@ These rounds of Texas Hold'em will have an increasing ante and will allow a play
 The engine that hosts the games and communicates with the bots is subject to change and is not in the scope of the challenge!
 
 For those who don't know the rules:
-  Each player pays an ante, or 'buy in' fee.
-  Player 1 in the turn order is known as the 'small blind' and will pay the small blind cost into the pot to play.
-  Player 2 is the 'big blind' and must put into the pot the big blind which is usually double the small blind.
-  Each player is dealt 2 cards as their hand. 
-  Once cards are dealt there is a betting phase, where player after the big blind will start. 
-    They can 'call' the big blind, meaning pay the same amount as big blind. 'raise' to a number bigger than the blind, or 'fold' removing themselves from the round.
-    Once everyone has called the largest raise or folded, the betting round is over.
-  The 'flop' is where the dealer pull 3 cards from the deck, followed by another betting round.
-  Then the 'turn' is 1 additional card from the deck, followed by a betting round.
-  Finally, the 'river' is the 5th card pulled from the deck, which is followed by a final betting round.
-  Out of the players still in the round, the one with the best hand is the winner, using standard poker card hands.
+
+- Each player pays an ante, or 'buy in' fee.
+- Player 1 in the turn order is known as the 'small blind' and will pay the small blind cost into the pot to play.
+- Player 2 is the 'big blind' and must put into the pot the big blind which is usually double the small blind.
+- Each player is dealt 2 cards as their hand. 
+- Once cards are dealt there is a betting phase, where player after the big blind will start. 
+  - They can 'call' the big blind, meaning pay the same amount as big blind. 'raise' to a number bigger than the blind, or 'fold' removing themselves from the round.
+  - Once everyone has called the largest raise or folded, the betting round is over.
+- The 'flop' is where the dealer pull 3 cards from the deck, followed by another betting round.
+- Then the 'turn' is 1 additional card from the deck, followed by a betting round.
+- Finally, the 'river' is the 5th card pulled from the deck, which is followed by a final betting round.
+- Out of the players still in the round, the one with the best hand is the winner, using standard poker card hands.
 
 ~~~    
 Royal Flush - Ace, King, Queen, Jack, 10 of same suit
