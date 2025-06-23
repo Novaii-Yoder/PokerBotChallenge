@@ -1,9 +1,13 @@
 # Yoder's Summer Challenge 2025
 ## Poker Competition
 
-This challenge is to build a poker bot to play in a game of Texas Hold'em. I hope to have a few people build bots by the end of the summer so that I can host a little tournament and see who's bot is best.
+This challenge is to build a poker bot to play in a game of Texas Hold'em. This includes Machine Learning algorithms, as well as statistical and mathematical evaluations of the game. 
 
-The goal is to build or train an algorithm that can play the game not optimally, but evaluate risk vs. reward. You can build a bot that always make the statistcally best choice, but this might lose to a bot that goes all in every hand. The goal is to learn or read the other bots in the game and play the players not only the game.
+The goal is to build or train an algorithm that can play the game not necessarily optimally, but evaluate risk vs. reward. You can build a bot that always make the statistically best choice, but this might lose to a bot that goes all in every hand. The goal is to learn or read the other bots in the game and play the players not only the game.
+
+The ultimate goal of this project is to host a tournament of bots at the end of the summer (mid August? maybe every year?) and see who made the best bot. But you are welcome to just do it for fun on your own. For people who want to be in the tournament, try to keep the compute demands pretty small as I will be running all the bots at the same time on semi-powerful computer. You can use common python libraries like keras, pytorch, ollama (there may not be a GPU, TBD), and math libraries. A full list of allowed libraries will evolve over time.
+
+You can provide your own models if you would like, again keep in mind potential compute limitations. You are also welcome to train on the fly while the game is running.
 
 Suggestions are welcome, as I am still deciding on how to structure this challenge, and would love to hear from people who are interested in trying.
 
@@ -57,3 +61,5 @@ The bots folder contains sample bots for you to view and copy if you so choose, 
 
 ## Things to think about
 I have added a function that is called at the end of every round, that will show the bots the hands and final actions of players (if players fold, hands are hidden). This is a way for you to check if other bots were bluffing or playing safe. The goal is that you can use this information to learn and predict your opponents moves, adding some dynamics to the game.
+
+One of the easiest tactics to mess with well trained bots is to go all in, all the time. I challenge you to find a good way to counter this strategy, as I am almost certain at least one person will submit a bit like that...
