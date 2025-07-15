@@ -59,6 +59,20 @@ Card is the only one the bots really need as the game information is encoded int
 
 The bots folder contains sample bots for you to view and copy if you so choose, they are very simple, mostly there to show you the functions required to work with the engine. You can put as many bots as you want into the folder, but only the first 5 alphabetically will be used in the current implementation of engine.py. You can edit this for testing if you'd like but there will likely be no more than 5 players at the table for the competition.
 
+## Requirements
+Python Version: `Python 3.12.4`
+
+### The base engine only uses base python, however here is all the currently allowed packages.
+- PyTorch
+- TensorFlow
+- Keras
+- Numpy
+- pandas
+- scikit-learn
+
+### To install the versions that will be used:
+pip install -r requirements.txt
+
 ## Things to think about
 I have added a function that is called at the end of every round, that will show the bots the hands and final actions of players (if players fold, hands are hidden). This is a way for you to check if other bots were bluffing or playing safe. The goal is that you can use this information to learn and predict your opponents moves, adding some dynamics to the game.
 

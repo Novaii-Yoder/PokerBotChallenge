@@ -59,7 +59,6 @@ class PokerBot(multiprocessing.Process):
         hand = game_state.get("hand", [])
         can_check = game_state.get("can_check", False)
         curr_bet = game_state.get("curr_bet", 0)
-        ante = game_state.get("ante", 0)
 
         # always commit, never re-raise
         if player_curr_bet > 0:
@@ -67,9 +66,7 @@ class PokerBot(multiprocessing.Process):
 
         # Dummy logic
         if random.randint(0, 100) > 50:
-            if not ante == 0:
-                return RaiseAction(curr_bet + (3 * ante))
-            return RaiseAction(curr_bet + 1)
+            return RaiseAction(curr_bet + random.randint(1, 10) * (player_stack // 28))
         else:
             return CallAction()
         pass

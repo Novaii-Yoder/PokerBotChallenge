@@ -64,12 +64,16 @@ class PokerBot(multiprocessing.Process):
         hand = [Card(suit=x["suit"], rank=x["rank"]) for x in hand]
         can_check = game_state.get("can_check", False)
         curr_bet = game_state.get("curr_bet", 0)
-        ante = game_state.get("ante", 0)
         pot = game_state.get("pot", 0)
         players = game_state.get("players", {})
         player_stack = players[self.name]["chips"]
+        big_blind = game_state.get("big_blind", 0)
+        small_blind = game_state.get("small_blind", 0)
+
         deck = Deck()
-        deck_left = set(deck.cards) - set(hand + board)
+        deck_left = deck.cards
+        for card in hand + board:
+            deck_left.remove(card)
         draws_left = 5 - len(board)
 
         ############
@@ -97,6 +101,7 @@ class PokerBot(multiprocessing.Process):
                     max_chance = chance
             return chance
 
+        # TODO: Challenge for the builder
         def straight_odds(hand, board):
             all_cards = hand + board
 
@@ -184,9 +189,8 @@ class PokerBot(multiprocessing.Process):
             if draws_left == 0 and score >= 1:
                 return CallAction()
 
-        if player_stack < ante * 2:
+        if player_stack < big_blind * 2:
             # print("desperate all in")
-            # print(f"current stack: {player_stack}, ante: {ante}")
             return CallAction()
         if (
             flush_odds(hand, board) <= 0.5

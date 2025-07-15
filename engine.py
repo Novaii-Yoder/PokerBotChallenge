@@ -243,19 +243,18 @@ def players_not_ready(players):
 Plays a round of poker, resets players turns and rotates position ordering at end of round
 
 @param players: list of players
-@param ante: ante chip cost
 @param blinds: tuple of small and big blind
 """
 
 
-def play_poker_round(players, ante=0, blinds=[0, 0], visual=False):
+def play_poker_round(players, blinds=[0, 0], visual=False):
     deck = Deck()
     deck.shuffle()
 
-    game_state = GameState(players=players, deck=deck, ante=ante)
+    game_state = GameState(players=players, deck=deck)
 
     print("Bots created!")
-    game_state.reset_round(ante=ante, blinds=blinds)
+    game_state.reset_round(blinds=blinds)
     # Pre-flop: Deal 2 cards to each player
     for player in players:
         if player.in_hand:
@@ -347,32 +346,6 @@ def terminate(players):
 # Start Game
 players = load_players_from_folder("bots", starting_chips=5000)
 
-antes = [
-    1,
-    1,
-    1,
-    2,
-    2,
-    2,
-    5,
-    5,
-    5,
-    5,
-    5,
-    10,
-    10,
-    10,
-    10,
-    10,
-    20,
-    20,
-    20,
-    20,
-    50,
-    50,
-    50,
-    100,
-]
 blinds = [
     [1, 2],
     [1, 2],
@@ -400,18 +373,17 @@ blinds = [
     [100, 250],
 ]
 
-# antes is a list of antes per round
-antes = [5]
 # blinds is a list of blinds used per round
 blinds = [[10, 20]]
 
-for i in range(len(antes)):
-    play_poker_round(players, ante=antes[i], blinds=blinds[i], visual=True)
+for blind_pair in blinds:
+    play_poker_round(players, blinds=blind_pair, visual=True)
+
     if len(players) == 1:
         break
 
 sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
-print("Top 2 move on (if they have enough chips for next antes)")
+print("Top 2 move on (if they have enough chips)")
 for p in sorted_players:
     print(f"{p.name} has {p.chips} chips.")
 

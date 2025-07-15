@@ -1,3 +1,4 @@
+import copy
 import random
 from collections import namedtuple
 from itertools import combinations
@@ -61,6 +62,18 @@ class Card:
     def __str__(self):
         return f"{self.rank} of {self.suit}"
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        if not isinstance(other, Card):
+            return False
+        return self.suit == other.suit and self.rank == other.rank
+
+    def __ne__(self, other):
+        result = self.__eq__(other)
+        return not result
+
     def short_str(self):
         return f"{self.REVERSE_RANK_MAP[self.rank]}{self.REVERSE_SUIT_MAP[self.suit]}"
 
@@ -86,6 +99,7 @@ will add new shuffle methods and multi-deck options for increase complexity for 
 class Deck:
     def __init__(self):
         self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
+        self.cards += copy.deepcopy(self.cards)
         self.used_cards = []
         self.community_cards = []
 
@@ -201,19 +215,21 @@ Game state obj
 
 
 class GameState:
-    def __init__(self, deck=[], players=[], ante=0):
+    def __init__(self, deck=[], players=[]):
         self.deck = deck
         self.players = players
         self.pot = 0
         self.curr_bet = 0
-        self.ante = ante
+        self.small_blind = 0
+        self.big_blind = 0
 
     def to_safe_dict(self):
         d = {}
         d["board"] = [x.to_dict() for x in self.deck.community_cards]
         d["pot"] = self.pot
         d["curr_bet"] = self.curr_bet
-        d["ante"] = self.ante
+        d["small_blind"] = self.small_blind
+        d["big_blind"] = self.big_blind
         players_dict = {}
         i = 0
         for player in self.players:
@@ -231,7 +247,8 @@ class GameState:
         d["is_end_state"] = True
         d["board"] = [x.to_dict() for x in self.deck.community_cards]
         d["pot"] = self.pot
-        d["ante"] = self.ante
+        d["small_blind"] = self.small_blind
+        d["big_blind"] = self.big_blind
         players_dict = {}
         i = 0
         for player in self.players:
@@ -254,14 +271,17 @@ class GameState:
             p.ready = False
             p.curr_bet = 0
 
-    def reset_round(self, ante=0, blinds=[0, 0]):
-        self.ante = ante
+    def reset_round(self, blinds=[0, 0]):
+        assert (
+            isinstance(blinds, list) and len(blinds) == 2
+        ), "Blinds must be of form [X, Y]"
         self.pot = 0
         self.reset_turn()
+        self.small_blind = blinds[0]
+        self.big_blind = blinds[1]
         blind_count = 0
         for p in self.players:
-            if p.chips >= ante + blinds[1]:
-                p.chips -= ante
+            if p.chips >= blinds[1]:
                 if blind_count == 0 and p.chips >= blinds[0]:
                     p.chips -= blinds[0]
                     self.pot += blinds[0]
@@ -276,7 +296,6 @@ class GameState:
                     blind_count += 1
 
                 p.in_hand = True
-                self.pot += ante
                 continue
             p.in_hand = False
         i = 0
