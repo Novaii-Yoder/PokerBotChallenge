@@ -52,10 +52,20 @@ class Card:
     REVERSE_RANK_MAP = {v: k for k, v in RANK_MAP.items()}
 
     def __init__(self, suit, rank):
-        if suit not in self.REVERSE_SUIT_MAP:
+        if suit in self.REVERSE_SUIT_MAP:
+            pass
+        elif suit in self.SUIT_MAP:
+            suit = self.SUIT_MAP[suit]
+        else:
             raise ValueError(f"Invalid suit name: {suit}")
-        if rank not in self.REVERSE_RANK_MAP:
+
+        if rank in self.REVERSE_RANK_MAP:
+            pass
+        elif rank in self.RANK_MAP:
+            rank = self.RANK_MAP[rank]
+        else:
             raise ValueError(f"Invalid rank name: {rank}")
+
         self.suit = suit
         self.rank = rank
 
