@@ -343,49 +343,49 @@ def terminate(players):
         player.bot.join()
 
 
-# Start Game
-players = load_players_from_folder("bots", starting_chips=5000)
+if __name__ == "__main__":
+    # Start Game
+    players = load_players_from_folder("bots", starting_chips=5000)
 
-blinds = [
-    [1, 2],
-    [1, 2],
-    [1, 2],
-    [2, 4],
-    [2, 4],
-    [2, 4],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [5, 10],
-    [20, 50],
-    [20, 50],
-    [20, 50],
-    [20, 50],
-    [50, 100],
-    [50, 100],
-    [100, 250],
-    [100, 250],
-]
+    blinds = [
+        [1, 2],
+        [1, 2],
+        [1, 2],
+        [2, 4],
+        [2, 4],
+        [2, 4],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [5, 10],
+        [20, 50],
+        [20, 50],
+        [20, 50],
+        [20, 50],
+        [50, 100],
+        [50, 100],
+        [100, 250],
+        [100, 250],
+    ]
 
-# blinds is a list of blinds used per round
-blinds = [[10, 20]]
+    # blinds is a list of blinds used per round
+    blinds = [[10, 20]]
 
-for blind_pair in blinds:
-    play_poker_round(players, blinds=blind_pair, visual=True)
+    for blind_pair in blinds:
+        play_poker_round(players, blinds=blind_pair, visual=True)
 
-    if len(players) == 1:
-        break
+        if len(players) == 1:
+            break
 
-sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
-print("Top 2 move on (if they have enough chips)")
-for p in sorted_players:
-    print(f"{p.name} has {p.chips} chips.")
+    sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
+    print("Top 2 move on (if they have enough chips)")
+    for p in sorted_players:
+        print(f"{p.name} has {p.chips} chips.")
 
-
-terminate(players)
+    terminate(players)
