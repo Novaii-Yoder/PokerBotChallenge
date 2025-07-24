@@ -53,7 +53,7 @@ class Player:
 
 
 """
-Loads players from folder
+Loads players from folder and immediate subfolders
 
 @param folder_path: location of folder containing bots
 @param starting_chips: the chip starting amount for players
@@ -65,28 +65,71 @@ Loads players from folder
 
 def load_players_from_folder(folder_path, starting_chips=100, players_max=5):
     players = []
-    i = 0
-    for filename in os.listdir(folder_path):
-        if i == 5:
+    count = 0
+
+    # load any bots directly in folder
+    for fname in os.listdir(folder_path):
+        if count >= players_max:
             break
-        if filename.endswith(".py"):
-            module_name = filename[:-3]
-            file_path = os.path.join(folder_path, filename)
+
+        full = os.path.join(folder_path, fname)
+        if not fname.endswith(".py") or not os.path.isfile(full):
+            continue
+
+        module_name = fname[:-3]
+        spec = importlib.util.spec_from_file_location(module_name, full)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+        if hasattr(module, "PokerBot"):
+            BotClass = getattr(module, "PokerBot")
+            parent_conn, child_conn = multiprocessing.Pipe()
+            bot = BotClass(child_conn, name=module_name)
+            if bot:
+                bot.start()
+                players.append(
+                    Player(
+                        bot=bot,
+                        conn=parent_conn,
+                        name=module_name,
+                        chips=starting_chips,
+                    )
+                )
+                count += 1
+
+    # load bots in project folders
+    for entry in os.listdir(folder_path):
+        if count >= players_max:
+            break
+
+        subdir = os.path.join(folder_path, entry)
+        if not os.path.isdir(subdir):
+            continue
+
+        # look for any .py file inside subdir defining PokerBot
+        for subfile in os.listdir(subdir):
+            if not subfile.endswith(".py"):
+                continue
+
+            file_path = os.path.join(subdir, subfile)
+            module_name = f"{entry}.{subfile[:-3]}"
             spec = importlib.util.spec_from_file_location(module_name, file_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
+
             if hasattr(module, "PokerBot"):
-                bot_class = getattr(module, "PokerBot")
-                p_conn, b_conn = multiprocessing.Pipe()
-                if bot := bot_class(b_conn, name=module_name):
+                BotClass = getattr(module, "PokerBot")
+                parent_conn, child_conn = multiprocessing.Pipe()
+                bot = BotClass(child_conn, name=entry)
+                if bot:
                     bot.start()
-                    print(f"CREATED BOT {module_name}")
-                    i += 1
                     players.append(
                         Player(
-                            bot=bot, conn=p_conn, name=module_name, chips=starting_chips
+                            bot=bot, conn=parent_conn, name=entry, chips=starting_chips
                         )
                     )
+                    count += 1
+                break  # stop after first PokerBot in this folder
 
     return players
 
@@ -253,7 +296,6 @@ def play_poker_round(players, blinds=[0, 0], visual=False):
 
     game_state = GameState(players=players, deck=deck)
 
-    print("Bots created!")
     game_state.reset_round(blinds=blinds)
     # Pre-flop: Deal 2 cards to each player
     for player in players:
@@ -320,7 +362,9 @@ def play_poker_round(players, blinds=[0, 0], visual=False):
 
     print(f"Standings:")
     for p in players:
-        p.bot.end_game(json.dumps(game_state.to_end_dict()))
+        p.conn.send(
+            json.dumps(game_state.to_end_dict([w.name for w in winners], p.name))
+        )
         print(f"{p.name}: {p.chips}")
         p.in_hand = True
         p.ready = False

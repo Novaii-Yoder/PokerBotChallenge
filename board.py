@@ -252,7 +252,7 @@ class GameState:
         d["players"] = players_dict
         return d
 
-    def to_end_dict(self):
+    def to_end_dict(self, winners, curr_player):
         d = {}
         d["is_end_state"] = True
         d["board"] = [x.to_dict() for x in self.deck.community_cards]
@@ -263,11 +263,16 @@ class GameState:
         i = 0
         for player in self.players:
             pd = {}
+            if player.name in winners:
+                pd["winner"] = True
+            else:
+                pd["winner"] = False
+
             pd["chips"] = player.chips
             pd["last_action"] = player.last_action
             pd["position"] = i
             i += 1
-            if player.in_hand:
+            if player.in_hand or curr_player == player.name:
                 pd["hand"] = [x.short_str() for x in player.hand]
             else:
                 pd["hand"] = []
