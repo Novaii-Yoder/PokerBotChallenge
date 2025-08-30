@@ -421,11 +421,14 @@ if __name__ == "__main__":
     # blinds is a list of blinds used per round
     blinds = [[10, 20]]
 
-    for blind_pair in blinds:
-        play_poker_round(players, blinds=blind_pair, visual=True)
-
-        if len(players) == 1:
-            break
+    for _ in range(100):
+        for blind_pair in blinds:
+            play_poker_round(players, blinds=blind_pair, visual=True)
+            for p in players:
+                if p.chips <= 1000:
+                    p.chips = 5000
+            if len(players) == 1:
+                break
 
     sorted_players = sorted(players, key=attrgetter("chips"), reverse=True)
     print("Top 2 move on (if they have enough chips)")
