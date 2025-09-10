@@ -22,7 +22,7 @@ hand_score = [
 # Actions for player
 FoldAction = namedtuple("FoldAction", [])
 CallAction = namedtuple("CallAction", [])
-CheckAction = namedtuple("CheckAction", [])
+CheckAction = namedtuple("CheckAction", [])  # may not need?
 RaiseAction = namedtuple("RaiseAction", ["amount"])
 
 """
@@ -109,7 +109,7 @@ will add new shuffle methods and multi-deck options for increase complexity for 
 class Deck:
     def __init__(self):
         self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
-        self.cards += copy.deepcopy(self.cards)
+        # self.cards += copy.deepcopy(self.cards)
         self.used_cards = []
         self.community_cards = []
 

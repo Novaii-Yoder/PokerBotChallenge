@@ -251,6 +251,19 @@ def betting_round(players, game_state, max_time=5):
                             if p.in_hand:
                                 p.ready = False
                         player.ready = True
+                    elif amount > game_state.curr_bet:
+                        print("Player raised more than they have... Going all in!")
+                        game_state.pot += player.chips
+                        player.chips = 0
+                        player.curr_bet = player.chips
+                        player.last_action = action
+                        game_state.curr_bet = player.chips
+                        # set all other players to unready
+                        for p in players:
+                            if p.in_hand:
+                                p.ready = False
+                        player.ready = True
+
                     else:
                         print("Bad raise, folding")
                         fold(player)
@@ -290,7 +303,7 @@ Plays a round of poker, resets players turns and rotates position ordering at en
 """
 
 
-def play_poker_round(players, blinds=[0, 0], visual=False):
+def play_poker_round(players, blinds=[0, 0], visual=False, delay=0):
     deck = Deck()
     deck.shuffle()
 
@@ -310,6 +323,7 @@ def play_poker_round(players, blinds=[0, 0], visual=False):
     # Placeholder betting round
     print("\n-- Betting Round (Pre-Flop) --\n")
     betting_round(players, game_state)
+    time.sleep(delay)
 
     # Flop
     deck.burn(1)
@@ -321,6 +335,7 @@ def play_poker_round(players, blinds=[0, 0], visual=False):
         print(f"Flop: {deck.show_table()}")
     print("\n-- Betting Round (Post-Flop) --\n")
     betting_round(players, game_state)
+    time.sleep(delay)
 
     # Turn
     deck.burn(1)
@@ -332,6 +347,7 @@ def play_poker_round(players, blinds=[0, 0], visual=False):
         print(f"Turn: {deck.show_table()}")
     print("\n-- Betting Round (Post-Turn) --\n")
     betting_round(players, game_state)
+    time.sleep(delay)
 
     # River
     deck.burn(1)
@@ -371,7 +387,9 @@ def play_poker_round(players, blinds=[0, 0], visual=False):
         p.hand = []
 
     # Rotate starting position of players
-    players = [players[-1]] + players[:-1]
+    temp = players.pop(0)
+    players.append(temp)
+    time.sleep(delay)
 
 
 """
@@ -389,7 +407,7 @@ def terminate(players):
 
 if __name__ == "__main__":
     # Start Game
-    players = load_players_from_folder("bots", starting_chips=5000)
+    players = load_players_from_folder("bots", starting_chips=50000)
 
     blinds = [
         [1, 2],
@@ -419,14 +437,14 @@ if __name__ == "__main__":
     ]
 
     # blinds is a list of blinds used per round
-    blinds = [[10, 20]]
+    blinds = [[100, 200]]
 
     for _ in range(100):
         for blind_pair in blinds:
-            play_poker_round(players, blinds=blind_pair, visual=True)
-            for p in players:
-                if p.chips <= 1000:
-                    p.chips = 5000
+            play_poker_round(players, blinds=blind_pair, visual=True, delay=0)
+            # for p in players:
+            #    if p.chips <= 1000:
+            #       p.chips = 5000
             if len(players) == 1:
                 break
 
