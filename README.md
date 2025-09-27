@@ -1,13 +1,13 @@
-# Yoder's Summer Challenge 2025
+# Yoder's Summer(?) Challenge 2025
 ## Poker Competition
 
 This challenge is to build a poker bot to play in a game of Texas Hold'em. This includes Machine Learning algorithms, as well as statistical and mathematical evaluations of the game. 
 
 The goal is to build or train an algorithm that can play the game not necessarily optimally, but evaluate risk vs. reward. You can build a bot that always make the statistically best choice, but this might lose to a bot that goes all in every hand. The goal is to learn or read the other bots in the game and play the players not only the game.
 
-The ultimate goal of this project is to host a tournament of bots at the end of the summer (mid August? maybe every year?) and see who made the best bot. But you are welcome to just do it for fun on your own. For people who want to be in the tournament, try to keep the compute demands pretty small as I will be running all the bots at the same time on semi-powerful computer. You can use common python libraries like keras, pytorch, ollama (there may not be a GPU, TBD), and math libraries. A full list of allowed libraries will evolve over time.
+The ultimate goal of this project is to host a tournament of bots at the end of the year(?) and see who made the best bot. But you are welcome to just do it for fun on your own. For people who want to be in the tournament, try to keep the compute demands pretty small as I will be running all the bots at the same time in container, incase you monsters try to hurt the other bots.
 
-You can provide your own models if you would like, again keep in mind potential compute limitations. You are also welcome to train on the fly while the game is running.
+You can provide your own ML models if you would like, again keep in mind potential compute limitations. You are also welcome to train on the fly while the game is running.
 
 Suggestions are welcome, as I am still deciding on how to structure this challenge, and would love to hear from people who are interested in trying.
 
@@ -50,30 +50,57 @@ Contains the host for the poker game, initializes players and sends data to them
 
 This file is subject to change, improvements to logic and restrictions on players trying to circumvent the rules will be added periodically.
 
+### netwire.py / engine_net.py 
+
+These files are internal functions for communicating with the bots from the engine.
+
 ### board.py
 
 This contains the definition for the Card, Board, and GameState objects which are used by the engine and bots to understand the game.
-Card is the only one the bots really need as the game information is encoded into a json for bots to read. Using the Card obj is by no means required, but you need it if you want to use the same evaluation functions as the engine (you can write your own too).
+Card and Deck are the only ones the bots really need as the game information is encoded into a json for bots to read. Using the Card obj is by no means required, but you need it if you want to use the same evaluation functions as the engine (you can write your own too). Deck is valuable if you want your bot to keep track of previous hands seen...
+
+### config.json / CONFIG.md
+
+This is the configuration file for engine.py. Information on how to set it up can be found in CONFIG.md.
+
+### manage_bots.py
+
+This is a tool for starting/checking/stopping bots based on the configuration in the config.json file. It can launch
+Python scripts/modules, native executables, or arbitrary command strings as specified in `config.json` (see notes below).
+Notes about starting bots with `manage_bots.py`:
+- `manage_bots.py` supports several config fields to start bots automatically:
+  - `cmd`: a raw command string executed via `bash -lc`.
+  - `exe` or `bin`: path to a native executable.
+  - `path`: path to a Python script (run with the project's Python interpreter).
+  - `module`: Python module to run with `python -m`.
+- The script will construct and run the command using the host/port/name configured for the bot and will report a clear error if no runnable command is specified.
 
 ### bots/
 
-The bots folder contains sample bots for you to view and copy if you so choose, they are very simple, mostly there to show you the functions required to work with the engine. You can put as many bots as you want into the folder, but only the first 5 alphabetically will be used in the current implementation of engine.py. You can edit this for testing if you'd like but there will likely be no more than 5 players at the table for the competition.
+The `bots/` folder contains sample bots for you to view and copy; they are simple examples that show the functions and protocol the engine expects. The engine does not use files from this folder — instead it connects to the host/port entries in `config.json` and only uses bots listed in that file. The engine enforces a remote-only policy: bots must be standalone TCP servers that accept framed-JSON messages (see protocol section below).
 
 ## Requirements
 Python Version: `Python 3.12.4`
 
-### The base engine only uses base python, however here is all the currently allowed packages.
-- PyTorch
-- TensorFlow
-- Keras
-- Numpy
-- pandas
-- scikit-learn
+### How to build a bot
+A bot can be in any language you want! This is because now the engine is using TCP to communicate with the bots, which means if you can create a server that accepts and return JSON, you can use it for the challenge.
 
-### To install the versions that will be used:
-pip install -r requirements.txt
+Bot protocol (framed JSON):
+
+Engine -> Bot (act request):
+```json
+<4-byte BE length> {"op":"act","state":{...}}
+```
+
+Bot -> Engine (response to act):
+```json
+<4-byte BE length> {"move":"raise","amount":150}
+```
+
+The engine will wait a short time for a response and eventually drop the connection and auto-fold for the bot. 
+
 
 ## Things to think about
 I have added a function that is called at the end of every round, that will show the bots the hands and final actions of players (if players fold, hands are hidden). This is a way for you to check if other bots were bluffing or playing safe. The goal is that you can use this information to learn and predict your opponents moves, adding some dynamics to the game.
 
-One of the easiest tactics to mess with well trained bots is to go all in, all the time. I challenge you to find a good way to counter this strategy, as I am almost certain at least one person will submit a bit like that...
+One of the easiest tactics to mess with well trained bots is to go all in, all the time. I challenge you to find a good way to counter this strategy, as I am almost certain at least one person will submit a bot like that...
