@@ -1,0 +1,29 @@
+{
+  "SEE CONFIG.MD":"FOR MORE INFO",
+  "game": {
+    "num_decks": 5,
+    "starting_chips": 2000,
+    "visual": false,
+    "delay": 0,
+    "max_table_size": 5
+  },
+  "bots": [
+    { "name": "Simple1", "exe": "./bots/cpp/simple_bot", "host": "127.0.0.1", "port": 5001 },
+    { "name": "Brainless1", "path": "./bots/brainless_bot.py", "host": "127.0.0.1", "port": 5002 },
+    { "name": "Simple2", "path": "./bots/simple_bot.py", "host": "127.0.0.1", "port": 5003 }
+  ]
+  ,
+  "tournament": {
+    "advance_per_table": 1,
+    "hands_per_match": 2,
+    "blind_step_per_round": 1,
+    "blind_step_per_tier": 1,
+    "blinds_schedule": [
+      {"small": 10, "big": 20},
+      {"small": 20, "big": 40},
+      {"small": 40, "big": 80},
+      {"small": 80, "big": 160}
+    ]
+  }
+}
+

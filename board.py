@@ -1,7 +1,11 @@
+import contextlib
 import copy
 import random
+import socket
 from collections import namedtuple
 from itertools import combinations
+
+from netwire import send_json
 
 # Card and Deck setup
 suits = ["Hearts", "Diamonds", "Clubs", "Spades"]
@@ -21,8 +25,8 @@ hand_score = [
 
 # Actions for player
 FoldAction = namedtuple("FoldAction", [])
-CallAction = namedtuple("CallAction", [])
-CheckAction = namedtuple("CheckAction", [])  # may not need?
+CallAction = namedtuple("CallAction", []) # call == check if no current bet
+CheckAction = namedtuple("CheckAction", [])
 RaiseAction = namedtuple("RaiseAction", ["amount"])
 
 """
@@ -102,21 +106,31 @@ class Card:
 
 """
 Deck obj
-will add new shuffle methods and multi-deck options for increase complexity for bots
+Contains methods for shuffling, dealing, and managing multiple decks.
+
+* Copy and import this for your bots to keep track of possible cards left. *
 """
 
 
 class Deck:
-    def __init__(self):
-        self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
-        # self.cards += copy.deepcopy(self.cards)
+    def __init__(self, num_decks: int = 1):
+        self.num_decks = max(1, int(num_decks))
+        self.cards = self._fresh_cards()
         self.used_cards = []
         self.community_cards = []
+
+    def _fresh_cards(self):
+        return [
+            Card(suit, rank)
+            for _ in range(self.num_decks)
+            for suit in suits
+            for rank in ranks
+        ]
 
     def shuffle(self):
         self.cards += self.used_cards
         self.used_cards = []
-        random.shuffle(self.cards)
+        random.shuffle(self.cards) # TODO: custom shuffle
 
     def deal(self, num=1):
         dealt = []
@@ -132,21 +146,48 @@ class Deck:
     def burn(self, num=1):
         for _ in range(num):
             if self.cards:
-                self.cards.pop()
+                card = self.cards.pop()
+                self.used_cards.append(card)
             else:
                 print("No more cards in the deck.")
                 return False
-            return True
+        return True
 
     def deal_table(self, num=1):
-        self.community_cards += self.deal(num)
+        dealt = []
+        for _ in range(num):
+            if self.cards:
+                card = self.cards.pop()
+                dealt.append(card)
+            else:
+                print("No more cards in the deck.")
+        self.community_cards += dealt
+        return self.community_cards
         return self.community_cards
 
     def show_table(self):
         return [str(card) for card in self.community_cards]
 
     def reset(self):
+        self.cards = self._fresh_cards()
+        self.used_cards = []
         self.community_cards = []
+    
+    # check if deck needs resetting
+    def verify(self, num_players):
+        total_cards = 52 * self.num_decks
+        if len(self.cards) + len(self.used_cards) + len(self.community_cards) != total_cards:
+            print("Deck inconsistency detected. Resetting deck.")
+            self.reset()
+            self.shuffle()
+            return True
+        if len(self.cards) < num_players * 2 + 5 + 3:  # 2 per player + 5 community + 3 burn
+            print("Deck low on cards. Resetting deck.")
+            self.reset()
+            self.shuffle()
+            return True
+        return False
+        
 
 
 """
@@ -218,6 +259,22 @@ def evaluate_hand(cards):
 
     return best_score, best_hand
 
+"""
+Helper to terminate a bot process via TCP
+"""
+
+
+def _terminate_bot(host, port, timeout=1.0):
+    """Politely tell a TCP bot to exit; ignore if it’s already gone."""
+    try:
+        with contextlib.closing(
+            socket.create_connection((host, port), timeout=timeout)
+        ) as s:
+            pass
+            send_json(s, {"op": "terminate"})
+    except OSError:
+        pass
+
 
 """
 Game state obj
@@ -236,6 +293,8 @@ class GameState:
     def to_safe_dict(self):
         d = {}
         d["board"] = [x.to_dict() for x in self.deck.community_cards]
+        # expose deck size so bots can reason about remaining cards / counting
+        d["num_decks"] = self.deck.num_decks if hasattr(self.deck, "num_decks") else 1
         d["pot"] = self.pot
         d["curr_bet"] = self.curr_bet
         d["small_blind"] = self.small_blind
@@ -252,10 +311,13 @@ class GameState:
         d["players"] = players_dict
         return d
 
-    def to_end_dict(self, winners, curr_player):
+    # This is sent to bots at end of each hand, and very start of game (for bot deck setup)
+    def to_end_dict(self, winners, curr_player, reset_deck=False):
         d = {}
         d["is_end_state"] = True
         d["board"] = [x.to_dict() for x in self.deck.community_cards]
+        d["num_decks"] = self.deck.num_decks if hasattr(self.deck, "num_decks") else 1
+        d["reset_deck"] = reset_deck
         d["pot"] = self.pot
         d["small_blind"] = self.small_blind
         d["big_blind"] = self.big_blind
@@ -296,33 +358,45 @@ class GameState:
         self.big_blind = blinds[1]
         blind_count = 0
         for p in self.players:
-            if p.chips >= blinds[1]:
-                if blind_count == 0 and p.chips >= blinds[0]:
+            # First check if player can even afford blinds
+            if p.chips < blinds[1]:  # Can't afford BB
+                print(f"{p.name} can't afford big blind ({p.chips} < {blinds[1]}), sitting out")
+                p.in_hand = False
+                continue
+            
+            # Now pay blinds
+            if blind_count == 1:  # Big blind
+                print(f"{p.name} pays big blind of {blinds[1]}")
+                p.chips -= blinds[1]
+                self.pot += blinds[1]
+                p.curr_bet = blinds[1]
+                self.curr_bet = blinds[1]
+                blind_count += 1
+                p.in_hand = True
+            elif blind_count == 0:  # Small blind
+                if p.chips >= blinds[0]:
+                    print(f"{p.name} pays small blind of {blinds[0]}")
                     p.chips -= blinds[0]
                     self.pot += blinds[0]
                     p.curr_bet = blinds[0]
                     self.curr_bet = blinds[0]
                     blind_count += 1
-                if blind_count == 1 and p.chips >= blinds[1]:
-                    p.chips -= blinds[1]
-                    self.pot += blinds[1]
-                    p.curr_bet = blinds[1]
-                    self.curr_bet = blinds[1]
-                    blind_count += 1
-
+                    p.in_hand = True
+                else:
+                    print(f"{p.name} can't afford small blind ({p.chips} < {blinds[0]}), sitting out")
+                    p.in_hand = False
+            else:  # Not in blind
                 p.in_hand = True
-                continue
-            p.in_hand = False
         i = 0
         while i < len(self.players):
             p = self.players[i]
-            if not p.in_hand:
+            if p.chips <= 0:
                 print(f"Eliminated player {p.name}")
-                self.players.remove(p)
-                p.conn.send("terminate")
-                p.bot.join()
-            else:
-                i += 1
+                # lets not terminate bots for now
+                #_terminate_bot(p.host, p.port, timeout=1.0)
+                self.players.pop(i)
+                continue
+            i += 1
 
 
 ########### Visual ascii art printing.
