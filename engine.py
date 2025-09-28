@@ -548,10 +548,10 @@ class Tournament:
             self.rules = rules
             config = config or {}
             self.advance_per_table = int(config.get("advance_per_table", 2))
-            self.max_table_size = int(config.get("max_table_size", rules.get("max_players", 6)))
+            self.max_table_size = int(rules.get("max_players", 6))
             self.rounds_per_match = int(config.get("hands_per_match", 1))
-            self.visual = bool(config.get("visual", True))
-            self.delay = float(config.get("delay", 0))
+            self.visual = bool(rules.get("visual", True))
+            self.delay = float(rules.get("delay", 0))
             self.blind_step_per_round = int(config.get("blind_step_per_round", 0))
             self.blind_step_per_tier = int(config.get("blind_step_per_tier", 1))
             self.blinds_schedule = config.get("blinds_schedule")
