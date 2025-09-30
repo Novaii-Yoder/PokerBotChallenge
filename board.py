@@ -362,6 +362,7 @@ class GameState:
             if p.chips < blinds[1]:  # Can't afford BB
                 print(f"{p.name} can't afford big blind ({p.chips} < {blinds[1]}), sitting out")
                 p.in_hand = False
+                #TODO: should bot be terminated? removed from players
                 continue
             
             # Now pay blinds

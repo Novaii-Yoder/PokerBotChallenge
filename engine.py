@@ -137,6 +137,11 @@ def betting_round(players, game_state, max_time=5):
             if player.ready:
                 continue
             if player.in_hand:
+                # Before getting action, check if last player
+                left = [p for p in players if p.in_hand]
+                if len(left) == 1:
+                    return left[0]
+
                 gs = game_state.to_safe_dict()
                 gs["hand"] = [x.to_dict() for x in player.hand]
                 gs["player_curr_bet"] = player.curr_bet
@@ -233,7 +238,6 @@ def betting_round(players, game_state, max_time=5):
                                 p.ready = False
                         player.ready = True
                     continue
-                    continue
 
                 case FoldAction():
                     fold(player)
@@ -243,10 +247,6 @@ def betting_round(players, game_state, max_time=5):
                     fold(player)
                     continue
 
-            # After processing any action, check if only one player remains
-            left = [p for p in players if p.in_hand]
-            if len(left) == 1:
-                return left[0]
     game_state.reset_turn()
     # If at any point only one player remains in hand, return them as winner
     left = [p for p in players if p.in_hand]
@@ -358,6 +358,8 @@ Plays a round of poker, resets players turns and rotates position ordering at en
 
 
 def play_poker_round(deck, players, blinds=[0, 0], visual=False, delay=0):
+    time.sleep(delay)
+
     if len(players) < 2:
         print(f"Not enough players to play")
         return
@@ -454,7 +456,6 @@ def play_poker_round(deck, players, blinds=[0, 0], visual=False, delay=0):
     # Check if deck needs resetting
     need_reset = deck.verify(len(players))
     award_pot_to_player(winners, players, game_state, reason="showdown", reset_deck=need_reset)
-    time.sleep(delay)
 
 
 """
